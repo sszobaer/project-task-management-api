@@ -33,6 +33,7 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
+  // POST /auth/register — create a new user account
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
@@ -43,6 +44,7 @@ export class AuthController {
   @ApiBody({ type: LoginDto })
   @ApiResponse({ status: 200, description: 'Login successful — returns JWT and user' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  // POST /auth/login — returns a JWT on valid credentials
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
@@ -53,6 +55,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Get the currently authenticated user' })
   @ApiResponse({ status: 200, description: 'Returns the authenticated user' })
   @ApiResponse({ status: 401, description: 'Missing or invalid JWT' })
+  // GET /auth/me — returns the authenticated user's profile
   getMe(@CurrentUser() user: AuthenticatedUser) {
     return this.authService.getMe(user.id);
   }

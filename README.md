@@ -1,98 +1,488 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Project & Task Management API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A RESTful backend API for authenticated users to manage projects and tasks, built as a Backend Intern Technical Assignment.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+**Technologies:** Node.js · TypeScript · NestJS · Prisma ORM · PostgreSQL · JWT · bcrypt · class-validator · Scalar API Docs
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Features
 
-## Project setup
+### Authentication
+- User registration with hashed passwords
+- Login with JWT issuance
+- `GET /auth/me` — current authenticated user
+- All protected routes require a valid Bearer token
+- Passwords are never returned in any response
 
-```bash
-$ npm install
+### Project Management
+- Create, read, update, delete projects
+- `ownerId` is always derived from the JWT — never accepted from the client
+- Only the project owner may update or delete a project
+- A participant (user assigned to any task in the project) may view the project
+
+### Task Management
+- Create, read, update, delete tasks scoped to a project
+- Task status (`TODO`, `IN_PROGRESS`, `DONE`) and priority (`LOW`, `MEDIUM`, `HIGH`)
+- Optional task assignment to a user
+- Only the project owner may create, delete, or reassign tasks
+- A task's assignee may view and update their own task only
+- `GET /tasks/assigned-to-me` — all tasks assigned to the JWT user
+
+### Task Querying
+- Pagination (`page`, `limit`)
+- Filter by `status` and `priority`
+- Search by `title` / `name` (partial, case-insensitive)
+
+---
+
+## Tech Stack
+
+| Technology      | Purpose                  |
+|-----------------|--------------------------|
+| Node.js         | Runtime                  |
+| TypeScript      | Programming language     |
+| NestJS 11       | Backend framework        |
+| Prisma 7        | ORM                      |
+| PostgreSQL      | Database                 |
+| @nestjs/jwt     | JWT authentication       |
+| passport-jwt    | JWT strategy             |
+| bcrypt          | Password hashing         |
+| class-validator | Request body validation  |
+| class-transformer | DTO transformation     |
+| @nestjs/swagger | OpenAPI spec generation  |
+| Scalar          | API documentation UI     |
+
+---
+
+## Project Structure
+
+```text
+src/
+├── common/
+│   ├── decorators/        # @CurrentUser() decorator
+│   ├── dto/               # PaginationQueryDto (shared base)
+│   ├── filters/           # Global HTTP exception filter
+│   └── interceptors/      # Global response interceptor
+├── modules/
+│   ├── auth/              # Registration, login, JWT guard & strategy
+│   │   ├── dto/
+│   │   ├── guards/
+│   │   ├── strategies/
+│   │   └── types/
+│   ├── project/           # Project CRUD
+│   │   └── dto/
+│   └── task/              # Task CRUD
+│       └── dto/
+├── prisma/                # PrismaService
+├── app.module.ts
+└── main.ts
+prisma/
+├── schema.prisma
+└── migrations/
+.env.example
+package.json
 ```
 
-## Compile and run the project
+| Directory/File          | Responsibility                                      |
+|-------------------------|-----------------------------------------------------|
+| `common/decorators`     | Extracts the authenticated user from the JWT        |
+| `common/dto`            | Shared `PaginationQueryDto` base class              |
+| `common/filters`        | Formats all error responses consistently            |
+| `common/interceptors`   | Wraps all success responses in `{ success, data }`  |
+| `modules/auth`          | Registration, login, `/auth/me`, JWT guard          |
+| `modules/project`       | Project CRUD with ownership authorization           |
+| `modules/task`          | Task CRUD with project-scoped authorization         |
+| `prisma`                | Database client and service                         |
+
+---
+
+## Prerequisites
+
+- **Node.js** v18 or later
+- **npm** v9 or later
+- **PostgreSQL** v13 or later (running locally or remote)
+- **Git**
+
+---
+
+## Installation
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+git clone <repository-url>
+cd project-task-management-api
+npm install
 ```
 
-## Run tests
+---
+
+## Environment Configuration
+
+Copy the example file:
 
 ```bash
-# unit tests
-$ npm run test
+# Linux / macOS
+cp .env.example .env
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Windows PowerShell
+Copy-Item .env.example .env
 ```
 
-## Deployment
+Open `.env` and fill in your values:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/your_db_name"
+JWT_SECRET=replace_with_a_strong_secret_at_least_32_chars
+JWT_EXPIRES_IN=1d
+```
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+| Variable       | Description                                  |
+|----------------|----------------------------------------------|
+| `DATABASE_URL` | PostgreSQL connection string                 |
+| `JWT_SECRET`   | Secret used to sign and verify JWTs          |
+| `JWT_EXPIRES_IN` | Token expiry duration (e.g. `1d`, `7d`)   |
+
+> **Never commit `.env` to Git.** It is already listed in `.gitignore`.
+
+---
+
+## Database Setup
+
+1. Ensure PostgreSQL is running.
+2. Create a database (e.g. `PTM_db`).
+3. Set `DATABASE_URL` in `.env`.
+4. Run migrations to create all tables:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npx prisma migrate dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+5. Generate the Prisma Client:
 
-## Resources
+```bash
+npx prisma generate
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+To visually inspect the database:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+npx prisma studio
+```
 
-## Support
+---
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Database Migrations
 
-## Stay in touch
+Migration files are committed to the repository under `prisma/migrations/`.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+| Command | Purpose |
+|---------|---------|
+| `npx prisma migrate dev` | Apply pending migrations and generate client (development) |
+| `npx prisma migrate deploy` | Apply pending migrations without prompts (CI/production) |
+| `npx prisma generate` | Regenerate the Prisma Client after schema changes |
 
-## License
+---
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Running the Application
+
+```bash
+# Development (watch mode — recommended)
+npm run start:dev
+
+# Standard start
+npm run start
+
+# Production (requires a prior build)
+npm run build
+npm run start:prod
+```
+
+The API is available at:
+
+```
+http://localhost:4000
+```
+
+> The port defaults to `4000`. Override it by setting `PORT` in `.env`.
+
+---
+
+## API Documentation
+
+Two documentation UIs are available once the server is running:
+
+| Interface | URL |
+|-----------|-----|
+| **Scalar** (interactive, recommended) | `http://localhost:4000/api/docs` |
+| **Swagger UI** (fallback) | `http://localhost:4000/docs` |
+
+The documentation covers:
+- All endpoints and HTTP methods
+- Authentication requirements (Bearer JWT)
+- Request parameters and bodies
+- Response shapes
+- Validation and authorization error responses
+
+---
+
+## Authentication
+
+### Flow
+
+1. Register a new account — `POST /api/auth/register`
+2. Login with your credentials — `POST /api/auth/login`
+3. Receive a JWT in the response
+4. Include the JWT in every subsequent protected request:
+
+```http
+Authorization: Bearer <JWT_TOKEN>
+```
+
+Passwords are hashed with **bcrypt** before storage. Password hashes are never returned in any API response.
+
+---
+
+## Authorization Model
+
+| Actor | Permissions |
+|-------|-------------|
+| **Project Owner** | Full access: create/view/update/delete project; create/view/update/delete any task; assign/reassign tasks |
+| **Task Assignee (Participant)** | View the project; view their own assigned task; update their own assigned task (title, description, status, priority) |
+| **Unrelated User** | No access to other users' projects or tasks |
+
+Key rules enforced server-side:
+
+- `ownerId` is always taken from the JWT — the client cannot set it.
+- Only the project owner may create, delete, or reassign tasks.
+- A participant may only view and update the specific task they are assigned to — not other tasks in the same project.
+- Only users who exist in the database may be assigned to a task.
+- All route ID parameters are validated as UUIDs before reaching business logic.
+
+---
+
+## API Endpoints
+
+### Authentication
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/api/auth/register` | None | Register a new user |
+| `POST` | `/api/auth/login` | None | Login and receive a JWT |
+| `GET` | `/api/auth/me` | JWT | Get the current user's profile |
+
+### Projects
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/api/projects` | JWT | Create a project (owner is JWT user) |
+| `GET` | `/api/projects` | JWT | List accessible projects (owned + participated) |
+| `GET` | `/api/projects/:id` | JWT | Get a single project (owner or participant) |
+| `PATCH` | `/api/projects/:id` | JWT | Update a project (owner only) |
+| `DELETE` | `/api/projects/:id` | JWT | Delete a project and all its tasks (owner only) |
+
+### Tasks
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/api/projects/:projectId/tasks` | JWT | Create a task in a project (owner only) |
+| `GET` | `/api/projects/:projectId/tasks` | JWT | List tasks (owner: all; participant: own only) |
+| `GET` | `/api/tasks/assigned-to-me` | JWT | List all tasks assigned to the JWT user |
+| `GET` | `/api/tasks/:id` | JWT | Get a single task (owner or that task's assignee) |
+| `PATCH` | `/api/tasks/:id` | JWT | Update a task (owner or that task's assignee) |
+| `DELETE` | `/api/tasks/:id` | JWT | Delete a task (owner only) |
+
+---
+
+## Task Filtering & Pagination
+
+All list endpoints support pagination and search. Task list endpoints additionally support status and priority filtering.
+
+```
+GET /api/projects/:projectId/tasks?page=1&limit=10&status=TODO&priority=HIGH&search=design
+GET /api/tasks/assigned-to-me?page=1&limit=10&status=IN_PROGRESS&search=homepage
+GET /api/projects?page=1&limit=10&search=marketing
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `page` | integer | `1` | Page number (min: 1) |
+| `limit` | integer | `10` | Items per page (min: 1, max: 100) |
+| `status` | enum | — | `TODO` \| `IN_PROGRESS` \| `DONE` |
+| `priority` | enum | — | `LOW` \| `MEDIUM` \| `HIGH` |
+| `search` | string | — | Partial, case-insensitive match on title/name |
+
+### Paginated Response Shape
+
+```json
+{
+  "success": true,
+  "data": [ ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 42,
+    "totalPages": 5
+  }
+}
+```
+
+---
+
+## Validation & Error Handling
+
+### Validation Strategy
+
+- **Request bodies** — validated via `class-validator` decorators on DTOs
+- **Query parameters** — validated via `class-validator` with `@Type(() => Number)` coercion
+- **Route parameters** — all UUID params validated with NestJS `ParseUUIDPipe` before reaching handlers
+- `ValidationPipe` is global with `whitelist: true` and `forbidNonWhitelisted: true`
+
+### Error Response Format
+
+All errors follow a consistent shape:
+
+```json
+{
+  "success": false,
+  "message": "Access denied"
+}
+```
+
+Validation errors include a field-level breakdown:
+
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    { "field": "title", "message": "title should not be empty" },
+    { "field": "status", "message": "status must be TODO, IN_PROGRESS, or DONE" }
+  ]
+}
+```
+
+### Success Response Format
+
+```json
+{
+  "success": true,
+  "data": { }
+}
+```
+
+---
+
+## HTTP Status Codes
+
+| Status | Meaning |
+|--------|---------|
+| `200` | Successful GET / PATCH / DELETE |
+| `201` | Resource created (POST) |
+| `400` | Validation error or bad request |
+| `401` | Missing or invalid JWT |
+| `403` | Authenticated but not authorized |
+| `404` | Resource not found |
+| `409` | Conflict (e.g. email already registered) |
+| `500` | Unexpected internal server error |
+
+---
+
+## Testing
+
+The project includes a Jest configuration and an end-to-end test scaffold.
+
+```bash
+# Unit tests (no unit test files written yet)
+npm test
+
+# E2E tests
+npm run test:e2e
+
+# Coverage report
+npm run test:cov
+```
+
+> No unit or integration test cases have been implemented in this submission. The test infrastructure (Jest, Supertest, `@nestjs/testing`) is installed and configured.
+
+---
+
+## Prisma Commands Reference
+
+```bash
+# Apply migrations and regenerate client (development)
+npx prisma migrate dev
+
+# Apply migrations without prompts (production/CI)
+npx prisma migrate deploy
+
+# Regenerate Prisma Client after schema changes
+npx prisma generate
+
+# Open Prisma Studio (database browser)
+npx prisma studio
+
+# Validate the schema
+npx prisma validate
+
+# Format the schema file
+npx prisma format
+```
+
+---
+
+## Git & Repository Notes
+
+- `.env` is listed in `.gitignore` — never committed
+- `node_modules/` is excluded
+- `.env.example` is committed as a configuration template
+- `prisma/migrations/` is committed — reviewers do not need to generate migrations manually
+- `generated/prisma/` (Prisma Client output) is excluded from Git
+
+---
+
+## Known Limitations & Assumptions
+
+- **No automated test cases** — the test infrastructure is present but no test specs were written.
+- **No Docker support** — the project requires a locally installed PostgreSQL instance.
+- **Task cascade delete** — when a project is deleted, all its tasks are automatically deleted via the Prisma `onDelete: Cascade` relation.
+- **Task assignment model** — any existing user may be assigned to a task. Being assigned to a task grants participant access to that project only. There is no separate project membership table.
+- **Pagination max limit** — `limit` is capped at `100` per request.
+- **`assignedToId` reassignment** — only the project owner may change the `assignedToId` field on an existing task.
+
+---
+
+## Bonus Features Implemented
+
+| Feature | Details |
+|---------|---------|
+| **Search** | All list endpoints support `?search=` for partial, case-insensitive name/title filtering |
+| **Scalar API Docs** | Interactive documentation at `/api/docs` |
+| **OpenAPI/Swagger** | Machine-readable spec at `/docs` |
+| **UUID Validation** | All route ID parameters are validated as UUIDs via `ParseUUIDPipe` |
+| **Shared base DTO** | `PaginationQueryDto` is extended by all query DTOs — no duplication |
+
+---
+
+## Assignment Compliance
+
+```
+[x] User registration
+[x] User login with JWT
+[x] Current-user endpoint (/auth/me)
+[x] Password hashing (bcrypt)
+[x] Project CRUD
+[x] Project ownership authorization (server-side)
+[x] Task CRUD (scoped to project)
+[x] Task assignment to users
+[x] Task status and priority
+[x] Task filtering by status and priority
+[x] Task pagination
+[x] Search across all list endpoints
+[x] Input validation (class-validator, ParseUUIDPipe)
+[x] Consistent error handling and response format
+[x] Prisma ORM with migrations
+[x] API documentation (Scalar + Swagger)
+[x] Participant authorization (task-level, not project-level)
+[ ] Automated tests (infrastructure present; no test cases written)
+[ ] Docker support
+```

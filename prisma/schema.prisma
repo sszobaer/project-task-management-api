@@ -34,11 +34,8 @@ model User {
   projects Project[] @relation("ProjectOwner")
   tasks    Task[]    @relation("TaskAssignee")
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  @@index([deletedAt])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Project {
@@ -51,12 +48,10 @@ model Project {
 
   tasks Task[]
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([ownerId])
-  @@index([deletedAt])
 }
 
 model Task {
@@ -73,15 +68,13 @@ model Task {
   assignedToId String?
   assignedTo   User?   @relation("TaskAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([projectId])
   @@index([assignedToId])
   @@index([status])
   @@index([priority])
-  @@index([deletedAt])
   @@index([projectId, status])
   @@index([projectId, priority])
 }

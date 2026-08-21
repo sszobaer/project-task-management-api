@@ -18,6 +18,7 @@ export class AuthService {
     private readonly jwt: JwtService,
   ) {}
 
+  // Register a new user — email is lowercased and password is hashed
   async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase() },
@@ -40,6 +41,7 @@ export class AuthService {
     return this.toSafeUser(user);
   }
 
+  // Login — validate credentials and return a signed JWT
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase() },
@@ -56,6 +58,7 @@ export class AuthService {
     return { token, user: this.toSafeUser(user) };
   }
 
+  // Get the current user's profile from the JWT sub claim
   async getMe(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
@@ -66,6 +69,7 @@ export class AuthService {
     return this.toSafeUser(user);
   }
 
+  // Strip password before returning user data
   private toSafeUser(user: User) {
     return {
       id: user.id,
@@ -76,6 +80,7 @@ export class AuthService {
     };
   }
 
+  // Sign a JWT with the given payload
   private signToken(payload: JwtPayload): string {
     return this.jwt.sign(payload);
   }
