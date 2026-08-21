@@ -15,22 +15,31 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
-      const body = exception.getResponse();
+      const body = exception.getResponse() as Record<string, unknown>;
 
-      if (typeof body === 'object' && body !== null && 'message' in body) {
-        const { message } = body as { message: string | string[] };
-        const isValidationError = Array.isArray(message);
+      if (typeof body === 'object' && body !== null && Array.isArray(body.message)) {
+        const errors = (body.message as Array<{ field?: string; constraints?: Record<string, string>; property?: string } | string>).map((item) => {
+          if (typeof item === 'string') return { message: item };
+          const field = item.property ?? item.field ?? 'unknown';
+          const message = item.constraints
+            ? Object.values(item.constraints)[0]
+            : String(item);
+          return { field, message };
+        });
 
         return res.status(status).json({
           success: false,
-          message: isValidationError ? 'Validation failed' : message,
-          ...(isValidationError && {
-            errors: (message as string[]).map((msg) => ({ message: msg })),
-          }),
+          message: 'Validation failed',
+          errors,
         });
       }
 
-      return res.status(status).json({ success: false, message: String(body) });
+      const message =
+        typeof body === 'object' && typeof body.message === 'string'
+          ? body.message
+          : String(body);
+
+      return res.status(status).json({ success: false, message });
     }
 
     res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({

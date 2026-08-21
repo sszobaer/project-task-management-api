@@ -19,6 +19,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { AuthenticatedUser } from './types/jwt-payload.type';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -52,7 +53,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Get the currently authenticated user' })
   @ApiResponse({ status: 200, description: 'Returns the authenticated user' })
   @ApiResponse({ status: 401, description: 'Missing or invalid JWT' })
-  getMe(@CurrentUser() user: { id: string; email: string }) {
+  getMe(@CurrentUser() user: AuthenticatedUser) {
     return this.authService.getMe(user.id);
   }
 }
