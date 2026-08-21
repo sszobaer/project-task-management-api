@@ -460,29 +460,3 @@ npx prisma format
 | **OpenAPI/Swagger** | Machine-readable spec at `/docs` |
 | **UUID Validation** | All route ID parameters are validated as UUIDs via `ParseUUIDPipe` |
 | **Shared base DTO** | `PaginationQueryDto` is extended by all query DTOs — no duplication |
-
----
-
-## Assignment Compliance
-
-```
-[x] User registration
-[x] User login with JWT
-[x] Current-user endpoint (/auth/me)
-[x] Password hashing (bcrypt)
-[x] Project CRUD
-[x] Project ownership authorization (server-side)
-[x] Task CRUD (scoped to project)
-[x] Task assignment to users
-[x] Task status and priority
-[x] Task filtering by status and priority
-[x] Task pagination
-[x] Search across all list endpoints
-[x] Input validation (class-validator, ParseUUIDPipe)
-[x] Consistent error handling and response format
-[x] Prisma ORM with migrations
-[x] API documentation (Scalar + Swagger)
-[x] Participant authorization (task-level, not project-level)
-[ ] Automated tests (infrastructure present; no test cases written)
-[ ] Docker support
-```
